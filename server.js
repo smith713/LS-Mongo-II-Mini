@@ -13,8 +13,57 @@ const STATUS_USER_ERROR = 422;
 
 app.use(bodyParser.json());
 
-// Your API will be built out here.
+app.get('/users', (req, res) => {
+  Person.find({}, (err, users) => {
+    if(err) {
+      res.status(STATUS_SERVER_ERROR);
+      res.json({ error: err });
+      return;
+    }
+    res.json(users);
+  });
+});
 
+app.get('/users/:direction', (req, res) => {
+  const { direction } = req.params;
+  let order = direction;
+  Person.find({})
+    .sort({ lastName: direction })
+    .exec((err, users) => {
+    if(err) {
+      res.status(STATUS_SERVER_ERROR);
+      res.json({ error: err });
+      return;
+    }
+    res.json(users);
+    });
+});
+
+app.get('/user-get-friends/:id', (req, res) => {
+  const { id } = req.params;
+  Person.findById(id)
+    .select('friends')
+    .exec((err, friends) => {
+    if(err) {
+      res.status(STATUS_SERVER_ERROR);
+      res.json({ error: err });
+      return;
+    }
+    res.json(friends);
+  }); 
+});
+
+app.put('/users/:id', (req, res) => {
+   Person.findByIdAndUpdate(
+     req.params.id, 
+     req.body, (err, response) => {
+      if(err) {
+        res.status(STATUS_USER_ERROR) 
+        res.json({ error: `Error in updating user with id ${req.params.id}` });
+      }
+      res.json(response);
+   });
+});
 
 mongoose.Promise = global.Promise;
 const connect = mongoose.connect(
